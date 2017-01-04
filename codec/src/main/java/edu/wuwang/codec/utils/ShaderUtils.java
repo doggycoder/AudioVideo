@@ -1,9 +1,3 @@
-/*
- *
- * ShaderUtils.java
- * 
- * Created by Wuwang on 2016/10/8
- */
 package edu.wuwang.codec.utils;
 
 import java.io.InputStream;

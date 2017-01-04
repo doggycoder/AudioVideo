@@ -1,10 +1,3 @@
-/*
- *
- * TextureUtils.java
- * 
- * Created by Wuwang on 2016/12/23
- * Copyright © 2016年 深圳哎吖科技. All rights reserved.
- */
 package edu.wuwang.codec.filter;
 
 import android.opengl.GLES20;

@@ -1,12 +1,3 @@
-/**
- * File        : DensityUtils.java
- * Author      :  wuwang
- * Version     :  1.0
- * Date        :  2016/8/29
- * Modify      :
- * Description :
- * Copyright   :
- */
 package edu.wuwang.codec.utils;
 
 import android.content.Context;
