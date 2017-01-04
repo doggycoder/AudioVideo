@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <edu.wuwang.codec.camera.CameraView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/mCameraView" />
+    <edu.wuwang.codec.camera.CircularProgressView android:layout_width="88dp"
+        android:layout_height="88dp"
+        android:background="@drawable/bt_capture"
+        android:clickable="true"
+        android:id="@+id/mCapture"
+        android:layout_marginBottom="20dp"
+        android:layout_centerHorizontal="true"
+        android:layout_alignParentBottom="true"/>
+</RelativeLayout>
