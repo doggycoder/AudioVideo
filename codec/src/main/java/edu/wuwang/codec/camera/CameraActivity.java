@@ -1,20 +1,19 @@
 package edu.wuwang.codec.camera;
 
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
 
 import android.Manifest;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
@@ -22,10 +21,7 @@ import android.view.View;
 import android.widget.Toast;
 
 import edu.wuwang.codec.R;
-import edu.wuwang.codec.coder.AudioEncoder;
 import edu.wuwang.codec.coder.CameraRecorder;
-import edu.wuwang.codec.coder.EncoderException;
-import edu.wuwang.codec.coder.YooRecorder;
 import edu.wuwang.codec.utils.PermissionUtils;
 
 /**
@@ -40,10 +36,9 @@ public class CameraActivity extends AppCompatActivity implements FrameCallback {
     private long maxTime=20000;
     private long timeStep=50;
     private boolean recordFlag=false;
+    private int type;       //1为拍照，0为录像
 
-//    private CameraRecorder mRecorder;
-//    private AudioEncoder mAudioEncoder;
-    private YooRecorder mp4Recorder;
+    private CameraRecorder mp4Recorder;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -66,18 +61,17 @@ public class CameraActivity extends AppCompatActivity implements FrameCallback {
                 public boolean onTouch(View v, MotionEvent event) {
                     switch (event.getAction()){
                         case MotionEvent.ACTION_DOWN:
-                            recordFlag=true;
+                            recordFlag=false;
                             time=System.currentTimeMillis();
-                            mCapture.postDelayed(captureTouchRunnable,1000);
+                            mCapture.postDelayed(captureTouchRunnable,500);
                             break;
                         case MotionEvent.ACTION_UP:
-                        case MotionEvent.ACTION_HOVER_EXIT:
-                            if(System.currentTimeMillis()-time<1000){
-                                mCapture.removeCallbacks(captureTouchRunnable);
-                            }else {
-
-                            }
                             recordFlag=false;
+                            if(System.currentTimeMillis()-time<500){
+                                mCapture.removeCallbacks(captureTouchRunnable);
+                                mCameraView.setFrameCallback(720,1280,CameraActivity.this);
+                                mCameraView.takePhoto();
+                            }
                             break;
                     }
                     return false;
@@ -86,65 +80,120 @@ public class CameraActivity extends AppCompatActivity implements FrameCallback {
         }
     };
 
+    //录像的Runnable
     private Runnable captureTouchRunnable=new Runnable() {
         @Override
         public void run() {
-            mExecutor.execute(new Runnable() {
+            recordFlag=true;
+            mExecutor.execute(recordRunnable);
+        }
+    };
 
-                @Override
-                public void run() {
-                    long timeCount=0;
+    private Runnable recordRunnable=new Runnable() {
+
+        @Override
+        public void run() {
+            type=0;
+            long timeCount=0;
 //                    if(mRecorder==null){
 //                        mRecorder=new CameraRecorder();
 //                        mAudioEncoder=new AudioEncoder();
 //                    }
-                    if(mp4Recorder==null){
-                        mp4Recorder=new YooRecorder();
-                    }
-                    long time=System.currentTimeMillis();
-                    String temp=getVideoPath(time+".mp4");
-//                    mRecorder.setSavePath(temp);
-                    mp4Recorder.setSavePath(getVideoPath(time+""),"mp4");
+            if(mp4Recorder==null){
+                mp4Recorder=new CameraRecorder();
+            }
+            long time=System.currentTimeMillis();
+            String savePath=getPath("video/",time+".mp4");
+            mp4Recorder.setSavePath(getPath("video/",time+""),"mp4");
 //                    mAudioEncoder.setSavePath(getVideoPath(time+".aac"));
-                    try {
+            try {
 //                        mRecorder.prepare(360,640);
 //                        mRecorder.start();
-                        mp4Recorder.prepare(384,640);
-                        mp4Recorder.start();
-//                        mAudioEncoder.prepare();
-//                        mAudioEncoder.start();
-                        mCameraView.startRecord();
-                    } catch (IOException | EncoderException | InterruptedException e) {
+                mp4Recorder.prepare(384,640);
+                mp4Recorder.start();
+                mCameraView.setFrameCallback(384,640,CameraActivity.this);
+                mCameraView.startRecord();
+                while (timeCount<=maxTime&&recordFlag){
+                    long start=System.currentTimeMillis();
+                    mCapture.setProcess((int)timeCount);
+                    long end=System.currentTimeMillis();
+                    try {
+                        Thread.sleep(timeStep-(end-start));
+                    } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
-                    while (timeCount<=maxTime&&recordFlag){
-                        long start=System.currentTimeMillis();
-                        mCapture.setProcess((int)timeCount);
-                        long end=System.currentTimeMillis();
-                        try {
-                            Thread.sleep(timeStep-(end-start));
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                        timeCount+=timeStep;
-                    }
-                    mCameraView.stopRecord();
-//                    mRecorder.stop();
-                    mp4Recorder.stop();
-//                    mAudioEncoder.stop();
-                    Log.e("wuwang","录制->"+temp);
+                    timeCount+=timeStep;
                 }
-            });
+                mCameraView.stopRecord();
+//                    mRecorder.stop();
+
+                if(timeCount<2000){
+                    mp4Recorder.cancel();
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            mCapture.setProcess(0);
+                            Toast.makeText(CameraActivity.this,"录像时间太短了",Toast.LENGTH_SHORT).show();
+
+                        }
+                    });
+                }else{
+                    mp4Recorder.stop();
+                    recordComplete(type,savePath);
+                }
+            } catch (IOException | InterruptedException e) {
+                e.printStackTrace();
+            }
         }
     };
 
-    private String getVideoPath(String path){
-        String p= Environment.getExternalStorageDirectory()+"/AiyaCamera/video/";
-        File f=new File(p);
-        if((!f.exists()||!f.isDirectory())&&f.mkdirs()){
-            android.util.Log.e("wuwang","mkdirs->"+p);
+    private String getBaseFolder(){
+        String baseFolder=Environment.getExternalStorageDirectory()+"/Codec/";
+        File f=new File(baseFolder);
+        if(!f.exists()){
+            boolean b=f.mkdirs();
+            if(!b){
+                baseFolder=getExternalFilesDir(null).getAbsolutePath()+"/";
+            }
         }
-        return p+path;
+        return baseFolder;
+    }
+
+    //获取VideoPath
+    private String getPath(String path,String fileName){
+        String p= getBaseFolder()+path;
+        File f=new File(p);
+        if(!f.exists()&&!f.mkdirs()){
+            return getBaseFolder()+fileName;
+        }
+        return p+fileName;
+    }
+
+    //图片保存
+    public void saveBitmap(Bitmap b){
+        long dataTake = System.currentTimeMillis();
+        final String jpegName=getPath("photo/", dataTake +".jpg");
+        try {
+            FileOutputStream fout = new FileOutputStream(jpegName);
+            BufferedOutputStream bos = new BufferedOutputStream(fout);
+            b.compress(Bitmap.CompressFormat.JPEG, 100, bos);
+            bos.flush();
+            bos.close();
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        recordComplete(type,jpegName);
+    }
+
+    private void recordComplete(int type,final String path){
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                mCapture.setProcess(0);
+                Toast.makeText(CameraActivity.this,"文件保存路径："+path,Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     @Override
