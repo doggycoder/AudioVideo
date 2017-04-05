@@ -1,61 +1,55 @@
-#include "libavcodec/avcodec.h"
-#include "libavformat/avformat.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
+#include "H264Decoder.h"
 #include "jni.h"
-#include "androidlog.h"
+#include "FFMpegLog.h"
 
-#define TAG "FFMPEG"
+Codec * codec;
 
-
-
-AVFormatContext * avFormatContext;
-AVOutputFormat * outputFormat;
-AVIOContext * avioContext;
-
-void init(){
-    av_register_all();
-}
-
-void setoutput(char * filename){
-    avformat_alloc_output_context2(&avFormatContext,outputFormat,0,filename);
-}
-
-void start(){
-//    avio_open2(&avioContext,)
-}
-
-jstring Java_edu_wuwang_ffmpeg_FFMpeg_getConfiguration(JNIEnv * env, jobject obj){
-    return env->NewStringUTF(avcodec_configuration());
+jstring Java_edu_wuwang_ffmpeg_FFMpeg_getInfo(JNIEnv * env, jclass obj){
+    return env->NewStringUTF(Codec::getInfo(0));
 }
 
 
-void Java_edu_wuwang_ffmpeg_FFMpeg_init(JNIEnv * env, jobject obj){
-    init();
+void Java_edu_wuwang_ffmpeg_FFMpeg_init(JNIEnv * env, jclass obj){
+    av_log_set_callback(ffmpeg_log);
+    Codec::init();
 }
 
-void Java_edu_wuwang_ffmpeg_FFMpeg_setOutput
-        (JNIEnv * env, jobject obj, jstring data){
-    const jchar * file= env->GetStringChars(data, JNI_FALSE);
-    setoutput((char *) file);
-    env->ReleaseStringChars(data, file);
+jint Java_edu_wuwang_ffmpeg_FFMpeg_start(JNIEnv * env, jobject obj){
+    codec=new H264Decoder();
+    return codec->start();
 }
 
-
-void Java_edu_wuwang_ffmpeg_FFMpeg_start
-        (JNIEnv * env, jobject obj){
-
+jint Java_edu_wuwang_ffmpeg_FFMpeg_input(JNIEnv * env, jobject obj, jbyteArray data){
+    return codec->input((uint8_t *) env->GetByteArrayElements(data, JNI_FALSE));
 }
 
-void Java_edu_wuwang_ffmpeg_FFMpeg_writeFrame
-        (JNIEnv * env, jobject obj, jbyteArray data){
-
+jint Java_edu_wuwang_ffmpeg_FFMpeg_output(JNIEnv * env, jobject obj, jbyteArray data){
+    return codec->output((uint8_t *) env->GetByteArrayElements(data, JNI_FALSE));
 }
-void Java_edu_wuwang_ffmpeg_FFMpeg_set
-        (JNIEnv * env, jobject obj, jint key, jint value){
 
+jint Java_edu_wuwang_ffmpeg_FFMpeg_stop(JNIEnv * env, jobject obj){
+    return codec->stop();
 }
-void Java_edu_wuwang_ffmpeg_FFMpeg_release
-        (JNIEnv * env, jobject obj){
+
+void Java_edu_wuwang_ffmpeg_FFMpeg_set(JNIEnv * env, jobject obj, jint key, jint value){
 
 }
 
+int Java_edu_wuwang_ffmpeg_FFMpeg_get(JNIEnv * env, jobject obj, jint key){
+    return codec->get(key);
+}
+
+void Java_edu_wuwang_ffmpeg_FFMpeg_release(JNIEnv * env, jclass obj){
+    Codec::release();
+}
+
+
+#ifdef __cplusplus
+}
+#endif
 

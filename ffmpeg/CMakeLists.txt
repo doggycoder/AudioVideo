@@ -10,9 +10,13 @@ aux_source_directory(./src/main/cpp DIR_SRCS)
 include_directories(./include)
 add_library(FFMpeg SHARED ${DIR_SRCS})
 target_link_libraries(FFMpeg
-                ${LIBDIR}/libswresample.a
                 ${LIBDIR}/libavformat.a
-                ${LIBDIR}/libavdevice.a
                 ${LIBDIR}/libavcodec.a
+                #libx264.a
+                ${LIBDIR}/libavdevice.a
+                ${LIBDIR}/libavfilter.a
+                ${LIBDIR}/libswscale.a
+                ${LIBDIR}/libswresample.a
+                ${LIBDIR}/libpostproc.a
                 ${LIBDIR}/libavutil.a
-                 log)
+                 log z m)

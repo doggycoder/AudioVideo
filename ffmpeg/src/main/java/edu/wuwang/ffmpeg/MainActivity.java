@@ -13,8 +13,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         mInfo= (TextView) findViewById(R.id.mInfo);
-        FFMpeg ffMpeg=new FFMpeg();
-        mInfo.setText(ffMpeg.getConfiguration());
-        ffMpeg.init();
+        mInfo.setText(FFMpeg.getInfo());
+        FFMpeg.init();
     }
 }

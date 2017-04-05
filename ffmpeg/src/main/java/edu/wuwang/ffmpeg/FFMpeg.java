@@ -9,18 +9,18 @@ package edu.wuwang.ffmpeg;
  */
 public class FFMpeg {
 
-    public native String getConfiguration();
+    public static final int KEY_WIDTH=0x1001;
+    public static final int KEY_HEIGHT=0x1002;
 
-    public native void init();
+    public static native String getInfo();
+    public static native void init();
 
-    public native void setOutput(String path);
-
-    public native void start();
-
-    public native void writeFrame(byte[] frame);
-
+    public native int start();
+    public native int input(byte[] data);
+    public native int output(byte[] data);
+    public native int stop();
     public native void set(int key,int value);
-
+    public native int get(int key);
     public native void release();
 
     static {
