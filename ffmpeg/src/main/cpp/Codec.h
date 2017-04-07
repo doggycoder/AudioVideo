@@ -15,6 +15,7 @@ class Codec {
 public:
     static const int KEY_WIDTH=0x1001;
     static const int KEY_HEIGHT=0x1002;
+    static const int KEY_BITRATE=0x2001;
 
 protected:
     AVFormatContext * avFormatContext;

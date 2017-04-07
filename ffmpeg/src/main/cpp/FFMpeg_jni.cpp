@@ -3,7 +3,7 @@ extern "C" {
 #endif
 
 
-#include "H264Decoder.h"
+#include "AACDecoder.h"
 #include "jni.h"
 #include "FFMpegLog.h"
 
@@ -20,7 +20,7 @@ void Java_edu_wuwang_ffmpeg_FFMpeg_init(JNIEnv * env, jclass obj){
 }
 
 jint Java_edu_wuwang_ffmpeg_FFMpeg_start(JNIEnv * env, jobject obj){
-    codec=new H264Decoder();
+    codec=new AACDecoder();
     return codec->start();
 }
 

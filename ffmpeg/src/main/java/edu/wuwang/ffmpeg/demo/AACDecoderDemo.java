@@ -8,6 +8,7 @@ import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
+import edu.wuwang.ffmpeg.FFMpeg;
 import edu.wuwang.ffmpeg.R;
 import java.io.File;
 import java.io.FileInputStream;
@@ -22,12 +23,14 @@ public class AACDecoderDemo extends AppCompatActivity implements View.OnClickLis
     private AudioTrack mAudioTrack;
     private int audioBufSize;
     private boolean isDestoryed;
+    private FFMpeg mpeg;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.demo_aacdecoder);
         init();
+        mpeg=new FFMpeg();
     }
 
     private void init(){
@@ -48,10 +51,12 @@ public class AACDecoderDemo extends AppCompatActivity implements View.OnClickLis
 
                 break;
             case R.id.mBtnStart:
-                mAudioTrack.play();
-                testPlayPcm();
+                mpeg.start();
+                //mAudioTrack.play();
+                //testPlayPcm();
                 break;
             case R.id.mBtnDecode:
+                mpeg.output(new byte[128]);
                 break;
         }
     }

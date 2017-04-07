@@ -4,10 +4,6 @@
 
 #include "H264Decoder.h"
 
-int width;
-int height;
-size_t yFrameSize;
-size_t uvFrameSize;
 
 int H264Decoder::start() {
     const char * test="/mnt/sdcard/test.264";

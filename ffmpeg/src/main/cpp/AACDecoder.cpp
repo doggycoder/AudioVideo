@@ -8,11 +8,6 @@
 
 #include "AACDecoder.h"
 
-int width;
-int height;
-size_t yFrameSize;
-size_t uvFrameSize;
-
 int AACDecoder::start() {
     const char * test="/mnt/sdcard/test.aac";
     avFormatContext=avformat_alloc_context();
@@ -36,7 +31,6 @@ int AACDecoder::start() {
     avPacket=av_packet_alloc();
     av_init_packet(avPacket);
     avFrame=av_frame_alloc();
-    av_log(NULL,AV_LOG_DEBUG,"w,h,yframe,uvframe info:%d,%d,%d,%d",width,height,yFrameSize,uvFrameSize);
     av_log(NULL,AV_LOG_DEBUG," start success");
     return 0;
 }
@@ -59,8 +53,7 @@ int AACDecoder::output(uint8_t *data) {
     ret=avcodec_receive_frame(avCodecContext,avFrame);
     if(ret==0){
         memcpy(data, avFrame->data[0], yFrameSize);
-        memcpy(data+yFrameSize, avFrame->data[1], uvFrameSize);
-        memcpy(data+yFrameSize+uvFrameSize, avFrame->data[2], uvFrameSize);
+        av_log(NULL,AV_LOG_DEBUG,"avcodec_receive_frame ok");
     }else{
         log(ret,"avcodec_receive_frame");
     }
