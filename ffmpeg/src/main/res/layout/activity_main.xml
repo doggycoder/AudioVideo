@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout android:id="@+id/activity_main"
+<LinearLayout android:id="@+id/activity_main"
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -8,10 +8,22 @@
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
+    android:orientation="vertical"
     tools:context="edu.wuwang.ffmpeg.MainActivity">
 
-    <TextView android:layout_width="wrap_content"
+    <Button android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/mInfo"
-        android:text="Hello World!" />
-</RelativeLayout>
+        android:id="@+id/mBtnDecodeH264"
+        android:onClick="onClick"
+        android:text="H264Decoder" />
+    <Button android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/mBtnDecodeAAC"
+        android:onClick="onClick"
+        android:text="AACDecoder" />
+    <Button android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/mBtnDecodeMP4"
+        android:onClick="onClick"
+        android:text="MP4Decoder" />
+</LinearLayout>
