@@ -25,38 +25,69 @@ public class AACDecoderDemo extends AppCompatActivity implements View.OnClickLis
     private boolean isDestoryed;
     private FFMpeg mpeg;
 
+    private int sampleRate;
+    private int bitRate;
+    private int channelCount;
+    private int audioFormat;
+    private int frameSize;
+
+    private byte[] tempData;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.demo_aacdecoder);
-        init();
         mpeg=new FFMpeg();
-    }
-
-    private void init(){
-        audioBufSize = AudioTrack.getMinBufferSize(8000,
-            AudioFormat.CHANNEL_OUT_MONO,
-            AudioFormat.ENCODING_PCM_16BIT);
-        mAudioTrack=new AudioTrack(AudioManager.STREAM_MUSIC, 8000,
-            AudioFormat.CHANNEL_OUT_MONO,
-            AudioFormat.ENCODING_PCM_16BIT,
-            audioBufSize,
-            AudioTrack.MODE_STREAM);
     }
 
     @Override
     public void onClick(View v) {
         switch (v.getId()){
             case R.id.mBtnInfo:
-
+                audioBufSize = AudioTrack.getMinBufferSize(44100,
+                    AudioFormat.CHANNEL_OUT_STEREO,
+                    AudioFormat.ENCODING_PCM_16BIT);
+                mAudioTrack=new AudioTrack(AudioManager.STREAM_MUSIC, 44100,
+                    AudioFormat.CHANNEL_OUT_STEREO,
+                    AudioFormat.ENCODING_PCM_16BIT,
+                    audioBufSize,
+                    AudioTrack.MODE_STREAM);
+                mAudioTrack.play();
+                testPlayPcm();
                 break;
             case R.id.mBtnStart:
                 mpeg.start();
-                //mAudioTrack.play();
-                //testPlayPcm();
+                sampleRate=mpeg.get(FFMpeg.KEY_SAMPLE_RATE);
+                channelCount=mpeg.get(FFMpeg.KEY_CHANNEL_COUNT);
+                audioFormat=mpeg.get(FFMpeg.KEY_AUDIO_FORMAT);
+                frameSize=mpeg.get(FFMpeg.KEY_FRAME_SIZE)*2;
+
+                audioBufSize = AudioTrack.getMinBufferSize(sampleRate,
+                    AudioFormat.CHANNEL_OUT_STEREO,
+                    AudioFormat.ENCODING_PCM_FLOAT);
+                tempData=new byte[audioBufSize];
+                mAudioTrack=new AudioTrack(AudioManager.STREAM_MUSIC, sampleRate,
+                    AudioFormat.CHANNEL_OUT_STEREO,
+                    AudioFormat.ENCODING_PCM_FLOAT,
+                    audioBufSize,
+                    AudioTrack.MODE_STREAM);
+                mAudioTrack.play();
+                Log.d("FFMPEG_LOG_","->"+sampleRate+"/"+channelCount+"/"+audioFormat+"/"+frameSize+"/"+audioBufSize);
                 break;
             case R.id.mBtnDecode:
-                mpeg.output(new byte[128]);
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        while (!isDestoryed){
+                            if(mpeg.output(tempData)!=FFMpeg.EOF){
+                                mAudioTrack.write(tempData, 0, tempData.length);
+                            }else {
+                                break;
+                            }
+
+                        }
+                    }
+                }).start();
                 break;
         }
     }
@@ -64,7 +95,7 @@ public class AACDecoderDemo extends AppCompatActivity implements View.OnClickLis
     private void testPlayPcm(){
         new Thread(new Runnable() {
             byte[] data1=new byte[audioBufSize*2];
-            File file=new File("/mnt/sdcard/test.pcm");
+            File file=new File("/mnt/sdcard/save.pcm");
             int off1=0;
             FileInputStream fileInputStream;
 

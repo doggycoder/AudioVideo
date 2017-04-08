@@ -9,10 +9,12 @@
 
 class AACDecoder: public Codec {
 private:
-    int width;
-    int height;
-    size_t yFrameSize;
-    size_t uvFrameSize;
+    size_t frameSize;
+    long bitRate;
+    int sampleRate;
+    int audioFormat;
+    int channelCount;
+    size_t bytesPerSample;
 public:
     int start();
     int input(uint8_t * data);
