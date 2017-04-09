@@ -6,7 +6,7 @@
       android:id="@+id/btnContainer">
     <Button android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="INFO"
+        android:text="PCMPLAY"
         android:onClick="onClick"
         android:id="@+id/mBtnInfo" />
     <Button android:layout_width="wrap_content"

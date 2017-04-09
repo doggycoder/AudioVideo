@@ -6,7 +6,7 @@ android {
 
     defaultConfig {
         applicationId "edu.wuwang.ffmpeg"
-        minSdkVersion 15
+        minSdkVersion 21
         targetSdkVersion 24
         versionCode 1
         versionName "1.0"
@@ -14,7 +14,7 @@ android {
         externalNativeBuild {
             cmake {
                 arguments '-DANDROID_PLATFORM=android-19','-DANDROID_TOOLCHAIN=clang', '-DANDROID_STL=gnustl_static'
-                cppFlags "-IC://Android/android-sdk/ndk-bundle/sources/cxx-stl/gnu-libstdc++/4.9/include",
+                cppFlags "-IE://Android/SDK/ndk-bundle/sources/cxx-stl/gnu-libstdc++/4.9/include",
                         "-I./include"
 
             }
