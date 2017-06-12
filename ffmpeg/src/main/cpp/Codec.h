@@ -28,6 +28,8 @@ protected:
     AVPacket * avPacket;
     AVFrame * avFrame;
 
+    const char  * cachePath;
+
 public:
     static char * getInfo(int key);
     static void init();
@@ -39,6 +41,8 @@ public:
     virtual int get(int key);
     virtual int input(uint8_t * data)=0;
     virtual int output(uint8_t * data)=0;
+    virtual char * file(const char * name);
+    virtual void setCachePath(const char * path);
     virtual int stop()=0;
 };
 

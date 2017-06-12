@@ -8,12 +8,12 @@
 
 #include "AACDecoder.h"
 
-FILE * file=NULL;
+FILE * cacheFile=NULL;
 
 int AACDecoder::start() {
-    const char * test="/mnt/sdcard/test.aac";
+    const char * test=file("/test.aac");
     avFormatContext=avformat_alloc_context();
-    file=fopen("/mnt/sdcard/save.pcm","w+b");
+    cacheFile=fopen(file("/save.pcm"),"w+b");
     int ret=avformat_open_input(&avFormatContext,test,NULL,NULL);
     if(ret!=0){
         log(ret,"avformat_open_input");
@@ -71,14 +71,14 @@ int AACDecoder::output(uint8_t *data) {
             for (int i = 0; i < frameSize; i++) {
                 for (int j=0;j< channelCount;j++){
                     memcpy(data+(i*channelCount+j)*bytesPerSample, avFrame->data[j]+i*bytesPerSample,bytesPerSample);
-                    fwrite(avFrame->data[j]+i*bytesPerSample,1,bytesPerSample,file);
+                    fwrite(avFrame->data[j]+i*bytesPerSample,1,bytesPerSample,cacheFile);
                 }
             }
             av_log(NULL,AV_LOG_DEBUG,"avcodec_receive_frame ok,%d,%d",bytesPerSample*frameSize*2,avFrame->nb_samples);
         }else{
             //单通道的，
             memcpy(data,avFrame->data[0],frameSize*channelCount*bytesPerSample);
-            fwrite(avFrame->data[0],1,frameSize*bytesPerSample*channelCount,file);
+            fwrite(avFrame->data[0],1,frameSize*bytesPerSample*channelCount,cacheFile);
             av_log(NULL,AV_LOG_DEBUG,"avcodec_receive_frame ok,%d",frameSize*channelCount*bytesPerSample);
         }
     }else{
@@ -89,7 +89,7 @@ int AACDecoder::output(uint8_t *data) {
 }
 
 int AACDecoder::stop() {
-    fclose(file);
+    fclose(cacheFile);
     avcodec_free_context(&avCodecContext);
     avformat_close_input(&avFormatContext);
     return 0;

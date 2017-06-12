@@ -4,8 +4,13 @@ extern "C" {
 
 
 #include "AACDecoder.h"
+#include "H264Decoder.h"
 #include "jni.h"
 #include "FFMpegLog.h"
+
+#define KEY_STR_CACHE_PATH 0x8001
+
+const char * cachePath;
 
 Codec * codec;
 
@@ -20,7 +25,8 @@ void Java_edu_wuwang_ffmpeg_FFMpeg_init(JNIEnv * env, jclass obj){
 }
 
 jint Java_edu_wuwang_ffmpeg_FFMpeg_start(JNIEnv * env, jobject obj){
-    codec=new AACDecoder();
+    codec=new H264Decoder();
+    codec->setCachePath(cachePath);
     return codec->start();
 }
 
@@ -36,8 +42,18 @@ jint Java_edu_wuwang_ffmpeg_FFMpeg_stop(JNIEnv * env, jobject obj){
     return codec->stop();
 }
 
-void Java_edu_wuwang_ffmpeg_FFMpeg_set(JNIEnv * env, jobject obj, jint key, jint value){
+void Java_edu_wuwang_ffmpeg_FFMpeg_setInt(JNIEnv * env, jclass obj, jint key, jint value){
 
+}
+
+void Java_edu_wuwang_ffmpeg_FFMpeg_setStr(JNIEnv * env, jclass obj, jint key, jstring value){
+    switch (key){
+        case KEY_STR_CACHE_PATH:
+            cachePath=env->GetStringUTFChars(value, (jboolean *) JNI_FALSE);
+            break;
+        default:
+            break;
+    }
 }
 
 int Java_edu_wuwang_ffmpeg_FFMpeg_get(JNIEnv * env, jobject obj, jint key){

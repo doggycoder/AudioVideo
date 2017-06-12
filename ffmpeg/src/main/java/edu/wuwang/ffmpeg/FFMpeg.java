@@ -17,6 +17,8 @@ public class FFMpeg {
     public static final int KEY_CHANNEL_COUNT=0x2004;
     public static final int KEY_FRAME_SIZE=0x2005;
 
+    public static final int KEY_STR_CACHE_PATH=0x8001;
+
     public static final int EOF=-541478725;
 
     public static native String getInfo();
@@ -26,7 +28,8 @@ public class FFMpeg {
     public native int input(byte[] data);
     public native int output(byte[] data);
     public native int stop();
-    public native void set(int key,int value);
+    public static native void setInt(int key,int value);
+    public static native void setStr(int key,String value);
     public native int get(int key);
     public native void release();
 

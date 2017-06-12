@@ -1,12 +1,15 @@
 package edu.wuwang.ffmpeg;
 
 import android.content.Intent;
+import android.graphics.Path;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
 import edu.wuwang.ffmpeg.demo.AACDecoderDemo;
 import edu.wuwang.ffmpeg.demo.H264DecoderDemo;
+import edu.wuwang.ffmpeg.utils.FileCopyCat;
+import java.io.File;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -14,7 +17,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        File cacheFile=getExternalFilesDir(null);
+        if(cacheFile==null){
+            cacheFile=getFilesDir();
+        }
+        FileCopyCat.getInstance().copyFolder(getAssets(),"sd",cacheFile.getAbsolutePath());
         FFMpeg.init();
+        FFMpeg.setStr(FFMpeg.KEY_STR_CACHE_PATH,cacheFile.getAbsolutePath());
     }
 
     @Override

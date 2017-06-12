@@ -10,7 +10,7 @@ size_t yFrameSize;
 size_t uvFrameSize;
 
 int Mp4Decoder::start() {
-    const char * test="/mnt/sdcard/test.264";
+    const char * test=file("test.264");
     avFormatContext=avformat_alloc_context();
     int ret=avformat_open_input(&avFormatContext,test,NULL,NULL);
     if(ret!=0){
