@@ -21,10 +21,14 @@ public class FFMpeg {
 
     public static final int EOF=-541478725;
 
+    public static final int DECODER_H264=0xf001;
+    public static final int DECODER_AAC=0xf002;
+    public static final int DECODER_MP4=0xf003;
+
     public static native String getInfo();
     public static native void init();
 
-    public native int start();
+    public native int start(int type);
     public native int input(byte[] data);
     public native int output(byte[] data);
     public native int stop();

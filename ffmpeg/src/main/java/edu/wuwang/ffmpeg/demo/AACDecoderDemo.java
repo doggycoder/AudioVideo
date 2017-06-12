@@ -70,7 +70,7 @@ public class AACDecoderDemo extends AppCompatActivity implements View.OnClickLis
                 playFloatPCM();
                 break;
             case R.id.mBtnStart:
-                mpeg.start();
+                mpeg.start(FFMpeg.DECODER_AAC);
                 sampleRate=mpeg.get(FFMpeg.KEY_SAMPLE_RATE);
                 channelCount=mpeg.get(FFMpeg.KEY_CHANNEL_COUNT);
                 audioFormat=mpeg.get(FFMpeg.KEY_AUDIO_FORMAT);

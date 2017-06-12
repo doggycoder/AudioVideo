@@ -87,7 +87,7 @@ public class H264DecoderDemo extends AppCompatActivity implements View.OnClickLi
                 mTvInfo.setText(FFMpeg.getInfo());
                 break;
             case R.id.mBtnStart:
-                mpeg.start();
+                mpeg.start(FFMpeg.DECODER_H264);
                 isCodecStarted=true;
                 break;
             case R.id.mBtnDecode:
