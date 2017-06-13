@@ -1,16 +1,11 @@
 //
 // Created by aiya on 2017/4/5.
 //
-
 #include "Mp4Decoder.h"
 
-int width;
-int height;
-size_t yFrameSize;
-size_t uvFrameSize;
 
 int Mp4Decoder::start() {
-    const char * test=file("test.264");
+    const char * test=file("/test.mp4");
     avFormatContext=avformat_alloc_context();
     int ret=avformat_open_input(&avFormatContext,test,NULL,NULL);
     if(ret!=0){
@@ -18,11 +13,12 @@ int Mp4Decoder::start() {
         return ret;
     }
     ret=avformat_find_stream_info(avFormatContext,NULL);
+    AVCodecParameters * parameter=avFormatContext->streams[0]->codecpar;
     if(ret<0){
         log(ret,"avformat_find_stream_info");
         return ret;
     }
-    avCodec=avcodec_find_decoder(AV_CODEC_ID_H264);
+    avCodec=avcodec_find_decoder(parameter->codec_id);
     avCodecContext=avcodec_alloc_context3(avCodec);
     ret=avcodec_open2(avCodecContext,avCodec,NULL);
     if(ret!=0){
@@ -32,8 +28,8 @@ int Mp4Decoder::start() {
     avPacket=av_packet_alloc();
     av_init_packet(avPacket);
     avFrame=av_frame_alloc();
-    width=avFormatContext->streams[0]->codecpar->width;
-    height=avFormatContext->streams[0]->codecpar->height;
+    width=parameter->width;
+    height=parameter->height;
     yFrameSize= (size_t) (width * height);
     uvFrameSize= yFrameSize>>2;
     av_log(NULL,AV_LOG_DEBUG,"w,h,yframe,uvframe info:%d,%d,%d,%d",width,height,yFrameSize,uvFrameSize);

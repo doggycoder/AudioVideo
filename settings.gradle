@@ -1,2 +1,2 @@
-include ':app', ':ffmpeg'
+include ':ffmpeg'
 include ':codec'

@@ -15,6 +15,7 @@ android {
             cmake {
                 arguments '-DANDROID_PLATFORM=android-19','-DANDROID_TOOLCHAIN=clang', '-DANDROID_STL=gnustl_static'
                 cppFlags "-IE://Android/SDK/ndk-bundle/sources/cxx-stl/gnu-libstdc++/4.9/include",
+                        '-D__STDC_CONSTANT_MACROS',
                         "-I./include"
 
             }

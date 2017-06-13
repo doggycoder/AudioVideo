@@ -8,7 +8,11 @@
 #include "Codec.h"
 
 class Mp4Decoder: public Codec {
-
+private:
+    int width;
+    int height;
+    size_t yFrameSize;
+    size_t uvFrameSize;
 public:
     int start();
     int input(uint8_t * data);

@@ -7,6 +7,7 @@ import android.view.View;
 import edu.wuwang.ffmpeg.demo.AACDecoder;
 import edu.wuwang.ffmpeg.demo.DemoActivity;
 import edu.wuwang.ffmpeg.demo.H264Decoder;
+import edu.wuwang.ffmpeg.demo.Mp4Decoder;
 import edu.wuwang.ffmpeg.utils.FileCopyCat;
 import java.io.File;
 
@@ -35,6 +36,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 openDemo(AACDecoder.class);
                 break;
             case R.id.mBtnDecodeMP4:
+                openDemo(Mp4Decoder.class);
                 break;
         }
     }

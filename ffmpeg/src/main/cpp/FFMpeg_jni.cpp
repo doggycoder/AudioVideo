@@ -3,10 +3,11 @@ extern "C" {
 #endif
 
 
-#include "AACDecoder.h"
-#include "H264Decoder.h"
 #include "jni.h"
 #include "FFMpegLog.h"
+#include "AACDecoder.h"
+#include "H264Decoder.h"
+#include "Mp4Decoder.h"
 
 #define KEY_STR_CACHE_PATH 0x8001
 #define DECODER_H264 0xf001
@@ -35,6 +36,8 @@ jint Java_edu_wuwang_ffmpeg_FFMpeg_start(JNIEnv * env, jobject obj,jint type){
         case DECODER_AAC:
             codec=new AACDecoder();
             break;
+        case DECODER_MP4:
+            codec=new Mp4Decoder();
         default:
             break;
     }
