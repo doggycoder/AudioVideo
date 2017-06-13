@@ -71,8 +71,13 @@ public class DemoActivity extends AppCompatActivity {
         }
     }
 
-    public void outInfo(String info){
-        mTvInfo.setText(mTvInfo.getText()+"\n"+info);
+    public void outInfo(final String info){
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                mTvInfo.setText(mTvInfo.getText()+"\n"+info);
+            }
+        });
     }
 
     public void clearInfo(){

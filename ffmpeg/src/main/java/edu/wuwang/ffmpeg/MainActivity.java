@@ -4,7 +4,7 @@ import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
-import edu.wuwang.ffmpeg.demo.AACDecoderDemo;
+import edu.wuwang.ffmpeg.demo.AACDecoder;
 import edu.wuwang.ffmpeg.demo.DemoActivity;
 import edu.wuwang.ffmpeg.demo.H264Decoder;
 import edu.wuwang.ffmpeg.utils.FileCopyCat;
@@ -29,11 +29,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void onClick(View v) {
         switch (v.getId()){
             case R.id.mBtnDecodeH264:
-                //openActivity(H264DecoderDemo.class);
                 openDemo(H264Decoder.class);
                 break;
             case R.id.mBtnDecodeAAC:
-                openActivity(AACDecoderDemo.class);
+                openDemo(AACDecoder.class);
                 break;
             case R.id.mBtnDecodeMP4:
                 break;

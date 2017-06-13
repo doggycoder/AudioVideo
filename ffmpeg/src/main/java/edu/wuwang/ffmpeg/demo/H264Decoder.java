@@ -26,6 +26,7 @@ public class H264Decoder extends DemoBase {
     @Override
     protected void onViewCreated() {
         activity.setBtnText("Info","初始化","解码一帧");
+        activity.outInfo("解码应用目录下test.h264文件");
         activity.outInfo("点击Info可获取FFMpeg信息");
         activity.outInfo("点击初始化获取test.h264信息，并准备解码");
         activity.outInfo("不断点击解码一帧以进行解码");
