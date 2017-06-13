@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent">
+  <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+      android:orientation="horizontal"
+      android:id="@+id/btnContainer">
+    <Button android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        android:onClick="onClick"
+        android:id="@+id/mBtn1" />
+    <Button android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:onClick="onClick"
+        android:visibility="gone"
+        android:id="@+id/mBtn2" />
+    <Button android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        android:onClick="onClick"
+        android:id="@+id/mBtn3" />
+    <Button android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        android:onClick="onClick"
+        android:id="@+id/mBtn4" />
+  </LinearLayout>
+  <android.opengl.GLSurfaceView android:layout_width="match_parent"
+      android:layout_height="match_parent"
+      android:layout_below="@id/btnContainer"
+      android:id="@+id/mGLView"/>
+  <TextView android:layout_width="match_parent" android:layout_height="match_parent"
+      android:layout_below="@id/btnContainer"
+      android:textSize="12sp"
+      android:textColor="#FFFF8800"
+      android:id="@+id/mTvInfo" />
+</RelativeLayout>

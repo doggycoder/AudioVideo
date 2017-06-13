@@ -29,9 +29,10 @@ void Codec::setCachePath(const char *path) {
 }
 
 char * Codec::file(const char * name){
-    char * file= (char *) cachePath;
-    strcat(file,name);
-    return file;
+    char * result = (char *) malloc(strlen(cachePath) + strlen(name) + 1);;
+    strcpy(result,cachePath);
+    strcat(result,name);
+    return result;
 }
 
 void Codec::set(int key, int value) {

@@ -94,7 +94,7 @@ public class AACDecoderDemo extends AppCompatActivity implements View.OnClickLis
                     public void run() {
                         while (!isDestoryed){
                             if(mpeg.output(tempData)!=FFMpeg.EOF){
-                                mAudioTrack.write(byte2float(tempData), 0, tempData.length/4,AudioTrack.WRITE_BLOCKING);
+                                //mAudioTrack.write(byte2float(tempData), 0, tempData.length/4,AudioTrack.WRITE_BLOCKING);
                                 Log.d("FFMPEG_LOG_","->"+tempData.length);
                             }else {
                                 break;
@@ -111,7 +111,7 @@ public class AACDecoderDemo extends AppCompatActivity implements View.OnClickLis
     private void testPlayPcm(){
         new Thread(new Runnable() {
             byte[] data1=new byte[audioBufSize*2];
-            File file=new File("/mnt/sdcard/test.pcm");
+            File file=new File(FFMpeg.getCachePath()+"/test.pcm");
             int off1=0;
             FileInputStream fileInputStream;
 
@@ -149,7 +149,7 @@ public class AACDecoderDemo extends AppCompatActivity implements View.OnClickLis
     private void playFloatPCM(){
         new Thread(new Runnable() {
             byte[] data1=new byte[audioBufSize*2];
-            File file=new File("/mnt/sdcard/save.pcm");
+            File file=new File(FFMpeg.getCachePath()+"/save.pcm");
             int off1=0;
             FileInputStream fileInputStream;
 

@@ -25,6 +25,8 @@ public class FFMpeg {
     public static final int DECODER_AAC=0xf002;
     public static final int DECODER_MP4=0xf003;
 
+    private static String cachePath="";
+
     public static native String getInfo();
     public static native void init();
 
@@ -32,10 +34,25 @@ public class FFMpeg {
     public native int input(byte[] data);
     public native int output(byte[] data);
     public native int stop();
-    public static native void setInt(int key,int value);
-    public static native void setStr(int key,String value);
+    private static native void setInt(int key,int value);
+    private static native void setStr(int key,String value);
     public native int get(int key);
     public native void release();
+
+    public static void set(int key,int value){
+        setInt(key, value);
+    }
+
+    public static void set(int key,String value){
+        if(key==KEY_STR_CACHE_PATH){
+            cachePath=value;
+        }
+        setStr(key, value);
+    }
+
+    public static String getCachePath(){
+        return cachePath;
+    }
 
     static {
         System.loadLibrary("FFMpeg");
