@@ -13,6 +13,9 @@ private:
     int height;
     size_t yFrameSize;
     size_t uvFrameSize;
+    AVPacket * spsPacket;
+    const uint8_t startCode[4]={0,0,0,1};
+    int ppsAndspsDispose(int streamId);
 public:
     int start();
     int input(uint8_t * data);

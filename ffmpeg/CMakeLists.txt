@@ -12,7 +12,7 @@ add_library(FFMpeg SHARED ${DIR_SRCS})
 target_link_libraries(FFMpeg
                 ${LIBDIR}/libavformat.a
                 ${LIBDIR}/libavcodec.a
-                #libx264.a
+                # ${LIBDIR}/libx264.a
                 ${LIBDIR}/libavdevice.a
                 ${LIBDIR}/libavfilter.a
                 ${LIBDIR}/libswscale.a

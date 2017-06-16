@@ -23,7 +23,7 @@ public class Mp4Decoder extends DemoBase {
 
     @Override
     protected void onViewCreated() {
-        activity.setBtnText("开始解码");
+        activity.setBtnText("图像解码","声音解码");
     }
 
     @Override
