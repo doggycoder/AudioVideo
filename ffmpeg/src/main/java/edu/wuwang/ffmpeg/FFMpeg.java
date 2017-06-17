@@ -24,6 +24,8 @@ public class FFMpeg {
     public static final int DECODER_H264=0xf001;
     public static final int DECODER_AAC=0xf002;
     public static final int DECODER_MP4=0xf003;
+    public static final int DECODER_MP4_AAC=0xf004;
+    public static final int DECODER_MP4_H264=0xf005;
 
     private static String cachePath="";
 

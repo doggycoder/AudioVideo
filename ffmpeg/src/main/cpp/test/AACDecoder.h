@@ -8,7 +8,8 @@
 #include "Codec.h"
 
 class AACDecoder: public Codec {
-private:
+protected:
+    FILE * cacheFile=NULL;
     size_t frameSize;
     long bitRate;
     int sampleRate;

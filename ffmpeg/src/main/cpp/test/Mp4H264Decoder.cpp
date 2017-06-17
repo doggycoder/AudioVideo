@@ -1,9 +1,9 @@
 //
 // Created by aiya on 2017/4/5.
 //
-#include "Mp4Decoder.h"
+#include "Mp4H264Decoder.h"
 
-int Mp4Decoder::start() {
+int Mp4H264Decoder::start() {
     const char * test=file("/test.mp4");
     avFormatContext=avformat_alloc_context();
     int ret=avformat_open_input(&avFormatContext,test,NULL,NULL);
@@ -12,7 +12,14 @@ int Mp4Decoder::start() {
         return ret;
     }
     ret=avformat_find_stream_info(avFormatContext,NULL);
-    AVCodecParameters * parameter=avFormatContext->streams[0]->codecpar;
+    AVCodecParameters * parameter=NULL;
+    for (int i = 0; i <avFormatContext->nb_streams ; i++) {
+        if(avFormatContext->streams[i]->codecpar->codec_type==AVMEDIA_TYPE_VIDEO){
+            parameter=avFormatContext->streams[i]->codecpar;
+            break;
+        }
+    }
+    if(parameter==NULL)return -1;
     if(ret<0){
         log(ret,"avformat_find_stream_info");
         return ret;
@@ -41,26 +48,28 @@ int Mp4Decoder::start() {
     return 0;
 }
 
-int Mp4Decoder::input(uint8_t *data) {
+int Mp4H264Decoder::input(uint8_t *data) {
     return 0;
 }
 
-int Mp4Decoder::output(uint8_t *data) {
+int Mp4H264Decoder::output(uint8_t *data) {
     int ret=av_read_frame(avFormatContext,avPacket);
     if(ret!=0){
         log(ret,"av_read_frame");
+        av_packet_unref(avPacket);
         return ret;
     }
     size_t size=0;
     size_t step=0;
     for (;step<avPacket->size;){
-        size=(avPacket->data[step]<<24)|(avPacket->data[step+1]<<16)|(avPacket->data[step+2]<<8)|avPacket->data[step+3];
+        memcpy(&size,avPacket->data+step,4);
         memcpy(avPacket->data+step,startCode,4);
         step=step+size+4;
     }
     ret=avcodec_send_packet(avCodecContext,avPacket);
     if(ret!=0){
         log(ret,"avcodec_send_packet");
+        av_packet_unref(avPacket);
         return ret;
     }
     ret=avcodec_receive_frame(avCodecContext,avFrame);
@@ -75,7 +84,7 @@ int Mp4Decoder::output(uint8_t *data) {
     return ret;
 }
 
-int Mp4Decoder::ppsAndspsDispose(int streamId)
+int Mp4H264Decoder::ppsAndspsDispose(int streamId)
 {
     int ret=0;
     size_t size= (size_t) avFormatContext->streams[0]->codecpar->extradata_size;
@@ -108,17 +117,17 @@ int Mp4Decoder::ppsAndspsDispose(int streamId)
     return 0;
 }
 
-int Mp4Decoder::stop() {
+int Mp4H264Decoder::stop() {
     avcodec_free_context(&avCodecContext);
     avformat_close_input(&avFormatContext);
     return 0;
 }
 
-void Mp4Decoder::set(int key, int value) {
+void Mp4H264Decoder::set(int key, int value) {
 
 }
 
-int Mp4Decoder::get(int key) {
+int Mp4H264Decoder::get(int key) {
     switch (key){
         case KEY_WIDTH:
             return width;

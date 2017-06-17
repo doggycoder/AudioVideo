@@ -5,14 +5,16 @@ extern "C" {
 
 #include "jni.h"
 #include "FFMpegLog.h"
-#include "AACDecoder.h"
-#include "H264Decoder.h"
-#include "Mp4Decoder.h"
+#include "test/AACDecoder.h"
+#include "test/H264Decoder.h"
+#include "test/Mp4Decoder.h"
 
 #define KEY_STR_CACHE_PATH 0x8001
 #define DECODER_H264 0xf001
 #define DECODER_AAC 0xf002
 #define DECODER_MP4 0xf003
+#define DECODER_MP4_AAC 0xf004
+#define DECODER_MP4_H264 0xf005
 
 const char * cachePath;
 
@@ -37,7 +39,15 @@ jint Java_edu_wuwang_ffmpeg_FFMpeg_start(JNIEnv * env, jobject obj,jint type){
             codec=new AACDecoder();
             break;
         case DECODER_MP4:
+            break;
+        case DECODER_MP4_AAC:
             codec=new Mp4Decoder();
+            codec->set(Codec::KEY_FLAG,1);
+            break;
+        case DECODER_MP4_H264:
+            codec=new Mp4Decoder();
+            codec->set(Codec::KEY_FLAG,0);
+            break;
         default:
             break;
     }
@@ -46,11 +56,17 @@ jint Java_edu_wuwang_ffmpeg_FFMpeg_start(JNIEnv * env, jobject obj,jint type){
 }
 
 jint Java_edu_wuwang_ffmpeg_FFMpeg_input(JNIEnv * env, jobject obj, jbyteArray data){
-    return codec->input((uint8_t *) env->GetByteArrayElements(data, JNI_FALSE));
+    jbyte * dt=env->GetByteArrayElements(data, JNI_FALSE);
+    int ret=codec->input((uint8_t *) dt);
+    env->ReleaseByteArrayElements(data,dt,JNI_ABORT);
+    return ret;
 }
 
 jint Java_edu_wuwang_ffmpeg_FFMpeg_output(JNIEnv * env, jobject obj, jbyteArray data){
-    return codec->output((uint8_t *) env->GetByteArrayElements(data, JNI_FALSE));
+    jbyte * dt= env->GetByteArrayElements(data, JNI_FALSE);
+    int ret=codec->output((uint8_t *) dt);
+    env->ReleaseByteArrayElements(data,dt,JNI_ABORT);
+    return ret;
 }
 
 jint Java_edu_wuwang_ffmpeg_FFMpeg_stop(JNIEnv * env, jobject obj){

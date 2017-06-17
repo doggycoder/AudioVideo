@@ -8,8 +8,6 @@
 
 #include "AACDecoder.h"
 
-FILE * cacheFile=NULL;
-
 int AACDecoder::start() {
     const char * test=file("/test.aac");
     avFormatContext=avformat_alloc_context();

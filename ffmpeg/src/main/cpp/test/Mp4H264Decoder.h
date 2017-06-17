@@ -2,12 +2,12 @@
 // Created by aiya on 2017/4/5.
 //
 
-#ifndef AUDIOVIDEO_MP4DECODER_H
-#define AUDIOVIDEO_MP4DECODER_H
+#ifndef AUDIOVIDEO_MP4H264DECODER_H
+#define AUDIOVIDEO_MP4H264DECODER_H
 
 #include "Codec.h"
 
-class Mp4Decoder: public Codec {
+class Mp4H264Decoder: public Codec {
 private:
     int width;
     int height;

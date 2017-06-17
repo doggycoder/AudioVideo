@@ -21,6 +21,8 @@ public:
     static const int KEY_CHANNEL_COUNT=0x2004;
     static const int KEY_FRAME_SIZE=0x2005;
 
+    static const int KEY_FLAG=0x0100;
+
 protected:
     AVFormatContext * avFormatContext;
     AVCodec * avCodec;
