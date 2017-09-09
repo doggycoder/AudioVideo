@@ -6,13 +6,21 @@ android {
 
     defaultConfig {
         applicationId "edu.wuwang.codec"
-        minSdkVersion 16
+        minSdkVersion 18
         targetSdkVersion 24
         versionCode 1
         versionName "1.0"
 
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
+        externalNativeBuild {
+            cmake {
+                cppFlags "-std=c++11 -frtti -fexceptions "
+            }
+        }
+        ndk{
+            abiFilters 'armeabi-v7a'
+        }
     }
     buildTypes {
         release {
@@ -21,13 +29,17 @@ android {
         }
     }
 
-    sourceSets{
-        main{
-            jni.srcDirs=[]
-            jniLibs.srcDirs=['src/main/libs']
+    externalNativeBuild {
+        cmake {
+            path 'CMakeLists.txt'
         }
     }
 
+    sourceSets{
+        main{
+            jniLibs.srcDirs+="libs"
+        }
+    }
 }
 
 dependencies {

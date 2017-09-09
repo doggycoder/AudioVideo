@@ -23,8 +23,8 @@ public class DataConvert {
     
     public static native void rgbaToYuv(byte[] rgba, int width, int height,byte[] yuv,int type);
 
-
     static {
+        System.loadLibrary("dec");
         System.loadLibrary("VideoConvert");
     }
 

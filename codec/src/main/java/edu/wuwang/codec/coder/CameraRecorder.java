@@ -281,6 +281,7 @@ public class CameraRecorder {
 //                byte[] temp=new byte[mInfo.size+7];
 //                buffer.get(temp,7,mInfo.size);
 //                addADTStoPacket(temp,temp.length);
+                Log.e("timelog","time:"+mInfo.presentationTimeUs);
                 if(mAudioTrack>=0&&mVideoTrack>=0&&mInfo.size>0&&mInfo.presentationTimeUs>0){
                     try {
                         mMuxer.writeSampleData(mAudioTrack,buffer,mInfo);

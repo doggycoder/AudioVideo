@@ -62,6 +62,9 @@ int Mp4H264Decoder::output(uint8_t *data) {
     size_t size=0;
     size_t step=0;
     for (;step<avPacket->size;){
+        if(avPacket->data[step+5]==0x65){
+            ppsAndspsDispose(0);
+        }
         memcpy(&size,avPacket->data+step,4);
         memcpy(avPacket->data+step,startCode,4);
         step=step+size+4;

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:orientation="vertical">
+    <SurfaceView
+        android:layout_width="200dp"
+        android:layout_height="300dp"
+        android:id="@+id/mSur"/>
+
+    <SurfaceView
+        android:layout_width="match_parent"
+        android:layout_height="300dp"
+        android:layout_toRightOf="@id/mSur"
+        android:layout_toEndOf="@id/mSur"
+        android:id="@+id/mSur2"/>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/mBtn0"
+            android:onClick="onClick"
+            android:text="Open"/>
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/mBtn1"
+            android:onClick="onClick"
+            android:text="start"/>
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/mBtn2"
+            android:onClick="onClick"
+            android:text="DECODE"/>
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/mBtn3"
+            android:onClick="onClick"
+            android:text="Test"/>
+    </LinearLayout>
+</RelativeLayout>

@@ -13,13 +13,22 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity android:name=".MainActivity">
-        </activity>
-        <activity android:name=".camera.CameraActivity"
-            android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+        </activity>
+        <activity android:name=".codec.DecodeActivity">
+
+        </activity>
+        <activity android:name=".camera.CameraActivity"
+            android:screenOrientation="portrait">
+        </activity>
+        <activity android:name=".camera.Camera2Activity"
+            android:screenOrientation="portrait">
+        </activity>
+        <activity android:name=".mp4processor.Mp4ModifyTestActivity"
+            android:screenOrientation="portrait">
         </activity>
     </application>
 
