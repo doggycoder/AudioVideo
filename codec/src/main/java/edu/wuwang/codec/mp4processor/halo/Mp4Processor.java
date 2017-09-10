@@ -17,83 +17,101 @@ import java.nio.ByteBuffer;
 import java.util.concurrent.Semaphore;
 
 
-//todo 4.4的手机不支持video/mp4v-es格式的视频流，MediaMuxer混合无法stop，5.0以上可以
+/**
+ * MP4处理工具，暂时只用于处理图像。
+ * 4.4的手机不支持video/mp4v-es格式的视频流，MediaMuxer混合无法stop，5.0以上可以
+ */
 public class Mp4Processor {
 
     private final int TIME_OUT=1000;
 
-    private String mInputPath;
-    private String mOutputPath;
+    private String mInputPath;                  //输入路径
+    private String mOutputPath;                 //输出路径
 
-    private MediaCodec mVideoDecoder;
-    private MediaCodec mVideoEncoder;
-    private MediaCodec mAudioDecoder;
-    private MediaCodec mAudioEncoder;
-    private MediaExtractor mExtractor;
-    private MediaMuxer mMuxer;
-    private EGLHelper mEGLHelper;
-    private MediaCodec.BufferInfo mVideoDecoderBufferInfo;
-    private MediaCodec.BufferInfo mAudioDecoderBufferInfo;
-    private MediaCodec.BufferInfo mVideoEncoderBufferInfo;
-    private MediaCodec.BufferInfo mAudioEncoderBufferInfo;
+    private MediaCodec mVideoDecoder;           //视频解码器
+    private MediaCodec mVideoEncoder;           //视频编码器
+    //private MediaCodec mAudioDecoder;           //音频解码器
+    //private MediaCodec mAudioEncoder;           //音频编码器
+    private MediaExtractor mExtractor;          //音视频分离器
+    private MediaMuxer mMuxer;                  //音视频混合器
+    private EGLHelper mEGLHelper;               //GL环境创建的帮助类
+    private MediaCodec.BufferInfo mVideoDecoderBufferInfo;  //用于存储当前帧的视频解码信息
+    //private MediaCodec.BufferInfo mAudioDecoderBufferInfo;  //用于存储当前帧的音频解码信息
+    private MediaCodec.BufferInfo mVideoEncoderBufferInfo;  //用于存储当前帧的视频编码信息
+    private MediaCodec.BufferInfo mAudioEncoderBufferInfo;  //用于纯粹当前帧的音频编码信息
 
-    private int mAudioEncoderTrack;
-    private int mVideoEncoderTrack;
-    private int mAudioDecoderTrack;
-    private int mVideoDecoderTrack;
+    private int mAudioEncoderTrack;     //解码音轨
+    private int mVideoEncoderTrack;     //解码视轨
+    private int mAudioDecoderTrack;     //编码音轨
+    private int mVideoDecoderTrack;     //编码视轨
 
-    private String mAudioMime;
-    private String mVideoMime;
+    //private String mAudioMime;
+    //private String mVideoMime;
 
-    private int mInputVideoWidth=0;
-    private int mInputVideoHeight=0;
+    private int mInputVideoWidth=0;     //输入视频的宽度
+    private int mInputVideoHeight=0;    //输入视频的高度
 
-    private int mOutputVideoWidth=0;
-    private int mOutputVideoHeight=0;
-    private int mVideoTextureId;
-    private SurfaceTexture mVideoSurfaceTexture;
+    private int mOutputVideoWidth=0;    //输出视频的宽度
+    private int mOutputVideoHeight=0;   //输出视频的高度
+    private int mVideoTextureId;        //原始视频图像的纹理
+    private SurfaceTexture mVideoSurfaceTexture;    //用于接收原始视频的解码的图像流
 
-    private boolean isRenderToWindowSurface;
-    private Surface mOutputSurface;
+    private boolean isRenderToWindowSurface;        //是否渲染到用户设置的WindowBuffer上，用于测试
+    private Surface mOutputSurface;                 //视频输出的Surface
 
-    private Thread mVideoThread;
-    private Thread mAudioThread;
+    private Thread mDecodeThread;
     private Thread mGLThread;
     private boolean mCodecFlag=false;
     private boolean isVideoExtractorEnd=false;
     private boolean isAudioExtractorEnd=false;
     private Renderer mRenderer=DEFAULT_RENDERER;
-    private long glTime=0;
     private boolean mGLThreadFlag=false;
     private Semaphore mSem;
-    private int mMuxerOutputType=MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4;
 
     private final Object Extractor_LOCK=new Object();
     private final Object MUX_LOCK=new Object();
 
+    private CompleteListener mCompleteListener;
+
     public Mp4Processor(){
         mEGLHelper=new EGLHelper();
         mVideoDecoderBufferInfo=new MediaCodec.BufferInfo();
-        mAudioDecoderBufferInfo=new MediaCodec.BufferInfo();
+        //mAudioDecoderBufferInfo=new MediaCodec.BufferInfo();
         mVideoEncoderBufferInfo=new MediaCodec.BufferInfo();
         mAudioEncoderBufferInfo=new MediaCodec.BufferInfo();
     }
 
 
+    /**
+     * 设置用于处理的MP4文件
+     * @param path 文件路径
+     */
     public void setInputPath(String path){
         this.mInputPath=path;
-
     }
 
+    /**
+     * 设置处理后的mp4存储的位置
+     * @param path 文件路径
+     */
     public void setOutputPath(String path){
         this.mOutputPath=path;
     }
 
+    /**
+     * 设置直接渲染到指定的Surface上
+     * @param surface 渲染的位置
+     * {@hide}
+     */
     public void setOutputSurface(Surface surface){
         this.mOutputSurface=surface;
         this.isRenderToWindowSurface=surface!=null;
     }
 
+    /**
+     * 设置用户处理接口
+     * @param renderer 处理接口
+     */
     public void setRenderer(Renderer renderer){
         mRenderer=renderer==null?DEFAULT_RENDERER:renderer;
     }
@@ -106,23 +124,35 @@ public class Mp4Processor {
         return mVideoSurfaceTexture;
     }
 
+    /**
+     * 设置输出Mp4的图像大小，默认为输出大小
+     * @param width 视频图像宽度
+     * @param height 视频图像高度
+     */
     public void setOutputSize(int width,int height){
         this.mOutputVideoWidth=width;
         this.mOutputVideoHeight=height;
     }
 
+    public void setOnCompleteListener(CompleteListener listener){
+        this.mCompleteListener=listener;
+    }
+
     public boolean prepare() throws IOException {
+        //todo 获取视频旋转信息，并做出相应处理
         MediaMetadataRetriever mMetRet=new MediaMetadataRetriever();
         mMetRet.setDataSource(mInputPath);
         mExtractor=new MediaExtractor();
         mExtractor.setDataSource(mInputPath);
         int count=mExtractor.getTrackCount();
+        //解析Mp4
         for (int i=0;i<count;i++){
             MediaFormat format=mExtractor.getTrackFormat(i);
             String mime=format.getString(MediaFormat.KEY_MIME);
             if(mime.startsWith("audio")){
                 mAudioDecoderTrack=i;
-                mAudioDecoder=MediaCodec.createDecoderByType(mime);
+                //todo 暂时不对音频处理，后续需要对音频处理时再修改这个
+                /*mAudioDecoder=MediaCodec.createDecoderByType(mime);
                 mAudioDecoder.configure(format,null,null,0);
                 if(!isRenderToWindowSurface){
                     Log.e("wuwang", format.toString());
@@ -135,9 +165,9 @@ public class Mp4Processor {
                             Integer.valueOf(mMetRet.extractMetadata(MediaMetadataRetriever.METADATA_KEY_BITRATE)));
                     mAudioEncoder=MediaCodec.createEncoderByType(mime);
                     mAudioEncoder.configure(audioFormat,null,null,MediaCodec.CONFIGURE_FLAG_ENCODE);
-                }
+                }*/
             }else if(mime.startsWith("video")){
-                Log.e("wuwang", format.toString());
+
                 mVideoDecoderTrack=i;
                 mInputVideoWidth=format.getInteger(MediaFormat.KEY_WIDTH);
                 mInputVideoHeight=format.getInteger(MediaFormat.KEY_HEIGHT);
@@ -168,6 +198,7 @@ public class Mp4Processor {
             }
         }
         if(!isRenderToWindowSurface){
+            //如果用户没有设置渲染到指定Surface，就需要导出视频，暂时不对音频做处理
             mMuxer=new MediaMuxer(mOutputPath,MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4);
             MediaFormat format=mExtractor.getTrackFormat(mAudioDecoderTrack);
             mAudioEncoderTrack=mMuxer.addTrack(format);
@@ -181,9 +212,9 @@ public class Mp4Processor {
         mCodecFlag=true;
         mGLThreadFlag=true;
         mVideoDecoder.start();
-        mAudioDecoder.start();
+        //mAudioDecoder.start();
         if(!isRenderToWindowSurface){
-            mAudioEncoder.start();
+            //mAudioEncoder.start();
             mVideoEncoder.start();
         }
 
@@ -194,60 +225,35 @@ public class Mp4Processor {
             }
         });
         mGLThread.start();
-
-//        mAudioThread=new Thread(new Runnable() {
-//            @Override
-//            public void run() {
-//                synchronized (MUX_LOCK){
-//                    try {
-//                        MUX_LOCK.wait();
-//                    } catch (InterruptedException e) {
-//                        e.printStackTrace();
-//                    }
-//                }
-//                while (mCodecFlag){
-//                    if(audioDecodeStep()){
-//                        break;
-//                    }
-//                }
-//            }
-//        });
-        mVideoThread=new Thread(new Runnable() {
+        mDecodeThread=new Thread(new Runnable() {
             @Override
             public void run() {
-                while (mCodecFlag){
-                    if(videoDecodeStep()){
-                        break;
-                    }
-                }
+                //视频处理
+                while (mCodecFlag&&!videoDecodeStep());
                 mGLThreadFlag=false;
                 try {
                     mGLThread.join();
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-                while (!audioDecodeStep());
-                Log.e("wuwang","audio finish ------------------------ ");
-                try {
-                    Thread.sleep(100);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+                //将原视频中的音频复制到新视频中
+                ByteBuffer buffer=ByteBuffer.allocate(1024*32);
+                while (!audioDecodeStep(buffer));
+                buffer.clear();
+
                 mMuxer.stop();
-                Log.e("wuwang","-----------------video thread end-----------------");
+                if(mCompleteListener!=null){
+                    mCompleteListener.onComplete(mOutputPath);
+                }
             }
         });
-//        mAudioThread.start();
-        mVideoThread.start();
+        mDecodeThread.start();
         return false;
     }
 
-    ByteBuffer buffer=ByteBuffer.allocate(1024*32);
-
-    private boolean audioDecodeStep(){
+    private boolean audioDecodeStep(ByteBuffer buffer){
         buffer.clear();
         synchronized (Extractor_LOCK){
-            Log.e("wuwang","audio-----------");
             mExtractor.selectTrack(mAudioDecoderTrack);
             int length=mExtractor.readSampleData(buffer,0);
             if(length!=-1){
@@ -257,7 +263,6 @@ public class Mp4Processor {
                 mAudioEncoderBufferInfo.presentationTimeUs=mExtractor.getSampleTime();
                 mAudioEncoderBufferInfo.offset=0;
                 mMuxer.writeSampleData(mAudioEncoderTrack,buffer,mAudioEncoderBufferInfo);
-//                    mAudioEncoder.queueInputBuffer(mInputIndex,0,length,mExtractor.getSampleTime(),mExtractor.getSampleFlags());
             }
             isAudioExtractorEnd=!mExtractor.advance();
         }
@@ -293,31 +298,24 @@ public class Mp4Processor {
     }
 
     private boolean videoEncodeStep(boolean isEnd){
-        //todo 这里只是临时策略，后面还需要修改，判断渲染的的确就是最后一帧了
         if(isEnd){
             mVideoEncoder.signalEndOfInputStream();
         }
         while (true){
             int mOutputIndex=mVideoEncoder.dequeueOutputBuffer(mVideoEncoderBufferInfo,TIME_OUT);
-            Log.i("wuwang","encoder :" + mOutputIndex);
             if(mOutputIndex>=0){
                 ByteBuffer buffer=getOutputBuffer(mVideoEncoder,mOutputIndex);
-
-                Log.d("wuwang","write sample "+mVideoEncoderBufferInfo.size+"/"+mVideoEncoderBufferInfo.presentationTimeUs+"/"
-                +mVideoEncoderBufferInfo.flags);
                 if(mVideoEncoderBufferInfo.size>0){
                     mMuxer.writeSampleData(mVideoEncoderTrack,buffer,mVideoEncoderBufferInfo);
                 }
                 mVideoEncoder.releaseOutputBuffer(mOutputIndex,false);
             }else if(mOutputIndex==MediaCodec.INFO_OUTPUT_FORMAT_CHANGED){
-                Log.e("wuwang","output ---  >"+mVideoEncoder.getOutputFormat());
                 MediaFormat format=mVideoEncoder.getOutputFormat();
                 mVideoEncoderTrack=mMuxer.addTrack(format);
                 mMuxer.start();
                 synchronized (MUX_LOCK){
                     MUX_LOCK.notifyAll();
                 }
-                Log.e("wuwang","start muxer ************************");
             }else if(mOutputIndex==MediaCodec.INFO_TRY_AGAIN_LATER){
                 break;
             }
@@ -356,7 +354,6 @@ public class Mp4Processor {
         @Override
         public void onFrameAvailable(SurfaceTexture surfaceTexture) {
             mSem.release();
-            Log.d("wuwang","onFrameAvailable - >"+mSem.availablePermits());
         }
     };
 
@@ -399,6 +396,10 @@ public class Mp4Processor {
         }else{
             return codec.getOutputBuffers()[index];
         }
+    }
+
+    public interface CompleteListener{
+        void onComplete(String path);
     }
 
 }
