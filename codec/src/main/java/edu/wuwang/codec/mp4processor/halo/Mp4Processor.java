@@ -12,6 +12,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.Surface;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.concurrent.Semaphore;
@@ -209,7 +210,6 @@ public class Mp4Processor {
     public boolean start(){
         isVideoExtractorEnd=false;
         isVideoExtractorEnd=false;
-        mCodecFlag=true;
         mGLThreadFlag=true;
         mVideoDecoder.start();
         //mAudioDecoder.start();
@@ -225,6 +225,8 @@ public class Mp4Processor {
             }
         });
         mGLThread.start();
+
+        mCodecFlag=true;
         mDecodeThread=new Thread(new Runnable() {
             @Override
             public void run() {
@@ -238,17 +240,23 @@ public class Mp4Processor {
                 }
                 //将原视频中的音频复制到新视频中
                 ByteBuffer buffer=ByteBuffer.allocate(1024*32);
-                while (!audioDecodeStep(buffer));
+                while (mCodecFlag&&!audioDecodeStep(buffer));
                 buffer.clear();
-
                 mMuxer.stop();
-                if(mCompleteListener!=null){
+                if(mCompleteListener!=null&&mCodecFlag){
                     mCompleteListener.onComplete(mOutputPath);
                 }
+                mCodecFlag=false;
             }
         });
         mDecodeThread.start();
         return false;
+    }
+
+    public void waitProcessFinish() throws InterruptedException {
+        if(mDecodeThread!=null&&mDecodeThread.isAlive()){
+            mDecodeThread.join();
+        }
     }
 
     private boolean audioDecodeStep(ByteBuffer buffer){
@@ -335,13 +343,15 @@ public class Mp4Processor {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            mVideoSurfaceTexture.updateTexImage();
-            mRenderer.onDraw();
-            mEGLHelper.setPresentationTime(mVideoDecoderBufferInfo.presentationTimeUs*1000);
-            if(!isRenderToWindowSurface){
-                videoEncodeStep(false);
+            if(mGLThreadFlag){
+                mVideoSurfaceTexture.updateTexImage();
+                mRenderer.onDraw();
+                mEGLHelper.setPresentationTime(mVideoDecoderBufferInfo.presentationTimeUs*1000);
+                if(!isRenderToWindowSurface){
+                    videoEncodeStep(false);
+                }
+                mEGLHelper.swapBuffers();
             }
-            mEGLHelper.swapBuffers();
         }
         if(!isRenderToWindowSurface){
             videoEncodeStep(true);
@@ -374,12 +384,58 @@ public class Mp4Processor {
         }
     };
 
-    public boolean stop(){
-        return false;
+    public boolean stop() throws InterruptedException {
+        boolean del=false;
+        if(mCodecFlag){
+            del=true;
+        }
+        mCodecFlag=false;
+        if(mDecodeThread!=null&&mDecodeThread.isAlive()){
+            mDecodeThread.join();
+        }
+        mGLThreadFlag=false;
+        if(mGLThread!=null&&mGLThread.isAlive()){
+            mSem.release();
+            mGLThread.join();
+        }
+        if(mVideoDecoder!=null){
+            mVideoDecoder.stop();
+        }
+        if(!isRenderToWindowSurface&&mVideoEncoder!=null){
+            mVideoEncoder.stop();
+        }
+        if(mMuxer!=null){
+            mMuxer.stop();
+        }
+        if(del){
+            File file=new File(mOutputPath);
+            if(file.exists()){
+                file.delete();
+            }
+        }
+        return true;
     }
 
-    public boolean release(){
-        return false;
+    public boolean release() throws InterruptedException {
+        if(mCodecFlag){
+            stop();
+        }
+        if(mVideoDecoder!=null){
+            mVideoDecoder.release();
+            mVideoDecoder=null;
+        }
+        if(mVideoEncoder!=null){
+            mVideoEncoder.release();
+            mVideoEncoder=null;
+        }
+        if(mMuxer!=null){
+            mMuxer.release();
+            mMuxer=null;
+        }
+        if(mExtractor!=null){
+            mExtractor.release();
+        }
+        return true;
     }
 
     private ByteBuffer getInputBuffer(MediaCodec codec, int index){

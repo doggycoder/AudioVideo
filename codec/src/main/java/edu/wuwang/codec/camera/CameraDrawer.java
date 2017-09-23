@@ -13,6 +13,8 @@ import android.opengl.GLES11Ext;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 
+import com.wuwang.aavt.gl.YuvOutputFilter;
+
 import edu.wuwang.codec.filter.AFilter;
 import edu.wuwang.codec.filter.EasyGlUtils;
 import edu.wuwang.codec.filter.GroupFilter;
@@ -41,7 +43,7 @@ public class CameraDrawer implements GLSurfaceView.Renderer {
     private int frameCallbackWidth, frameCallbackHeight; //回调数据的宽高
     private boolean oneShotCallback = false;       //是否回调
     private boolean isKeepCallback = false;     //是否一直回调
-    private ByteBuffer[] outPutBuffer = new ByteBuffer[3];
+    private byte[][] outPutBuffer = new byte[3][];
     private Queue<byte[]> cameraByteQueue;
     private int indexOutput = 0;
     private boolean update = false;
@@ -57,6 +59,8 @@ public class CameraDrawer implements GLSurfaceView.Renderer {
 
     private int mPreviewWidth=0,mPreviewHeight=0;
     private boolean isPreviewSizeChanged=false;
+
+    private YuvOutputFilter mYuvFilter;
 
     public static final int PARAMS_TYPE_FILTER = 0;
 
@@ -79,6 +83,7 @@ public class CameraDrawer implements GLSurfaceView.Renderer {
         MatrixUtils.flip(OM,false,true);
 
         mPreFilter.setMatrix(OM);
+        mYuvFilter=new YuvOutputFilter(YuvOutputFilter.EXPORT_TYPE_NV12);
     }
 
     public void addFilter(AFilter filter,boolean beforeTrack){
@@ -102,6 +107,7 @@ public class CameraDrawer implements GLSurfaceView.Renderer {
         mShowFilter.create();
         mBeFilter.create();
         mAfFilter.create();
+        mYuvFilter.create();
     }
 
     public SurfaceTexture getTexture() {
@@ -185,7 +191,7 @@ public class CameraDrawer implements GLSurfaceView.Renderer {
         this.frameCallbackHeight = height;
         if (frameCallbackWidth > 0 && frameCallbackHeight > 0) {
             if(outPutBuffer!=null){
-                outPutBuffer=new ByteBuffer[3];
+                outPutBuffer=new byte[3][];
             }
             MatrixUtils.getShowMatrix(EM,mPreviewWidth, mPreviewHeight, frameCallbackWidth,frameCallbackHeight);
             MatrixUtils.flip(EM,false,true);
@@ -228,28 +234,31 @@ public class CameraDrawer implements GLSurfaceView.Renderer {
     //需要回调，则缩放图片到指定大小，读取数据并回调
     private void callbackIfNeeded() {
         if (mFrameCallback != null && (oneShotCallback || isKeepCallback)) {
+            mYuvFilter.sizeChanged(frameCallbackWidth,frameCallbackHeight);
             indexOutput = indexOutput++ >= 2 ? 0 : indexOutput;
             if (outPutBuffer[indexOutput] == null) {
-                outPutBuffer[indexOutput] = ByteBuffer.allocate(frameCallbackWidth *
-                    frameCallbackHeight*4);
+                outPutBuffer[indexOutput] = new byte[frameCallbackWidth*frameCallbackHeight*3/2];
             }
-            GLES20.glViewport(0, 0, frameCallbackWidth, frameCallbackHeight);
-            EasyGlUtils.bindFrameTexture(fFrame[0],fTexture[0]);
-            mShowFilter.setMatrix(EM);
-            mShowFilter.draw();
-            frameCallback();
-            oneShotCallback = false;
-            EasyGlUtils.unBindFrameBuffer();
-            mShowFilter.setMatrix(SM);
+            mYuvFilter.drawToTexture(mAfFilter.getOutputTexture());
+            mYuvFilter.getOutput(outPutBuffer[indexOutput]);
+            mFrameCallback.onFrame(outPutBuffer[indexOutput],System.currentTimeMillis());
+//            GLES20.glViewport(0, 0, frameCallbackWidth, frameCallbackHeight);
+//            EasyGlUtils.bindFrameTexture(fFrame[0],fTexture[0]);
+//            mShowFilter.setMatrix(EM);
+//            mShowFilter.draw();
+//            frameCallback();
+//            oneShotCallback = false;
+//            EasyGlUtils.unBindFrameBuffer();
+//            mShowFilter.setMatrix(SM);
         }
     }
 
     //读取数据并回调
-    private void frameCallback(){
-        GLES20.glReadPixels(0, 0, frameCallbackWidth, frameCallbackHeight,
-            GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, outPutBuffer[indexOutput]);
-        mFrameCallback.onFrame(outPutBuffer[indexOutput].array(),mSurfaceTexture.getTimestamp());
-    }
+//    private void frameCallback(){
+//        GLES20.glReadPixels(0, 0, frameCallbackWidth, frameCallbackHeight,
+//            GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, outPutBuffer[indexOutput]);
+//        mFrameCallback.onFrame(outPutBuffer[indexOutput].array(),mSurfaceTexture.getTimestamp());
+//    }
 
     //根据摄像头设置纹理映射坐标
     public void setCameraId(int id) {

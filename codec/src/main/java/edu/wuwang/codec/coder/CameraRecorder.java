@@ -335,7 +335,8 @@ public class CameraRecorder {
                 if(yuv==null){
                     yuv=new byte[width*height*3/2];
                 }
-                DataConvert.rgbaToYuv(data,width,height,yuv,convertType);
+//                DataConvert.rgbaToYuv(data,width,height,yuv,convertType);
+                System.arraycopy(data,0,yuv,0,yuv.length);
             }
             ByteBuffer buffer=getInputBuffer(mVideoEnc,index);
             buffer.clear();
